@@ -4,6 +4,18 @@ version = "0.1.0"
 description = "Board game recommender bots 🤖"
 authors = ["Markus Shepherd <markus@recommend.games>"]
 license = "MIT"
+readme = "README.md"
+homepage = "https://recommend.games/"
+repository = "https://gitlab.com/recommend.games/board-game-bot"
+keywords = [
+    "board games",
+    "tabletop games",
+    "bot",
+    "twitter"
+]
+classifiers = [
+    "Topic :: Games/Entertainment :: Board Games"
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
