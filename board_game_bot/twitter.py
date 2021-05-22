@@ -32,31 +32,31 @@ def create_api():
 class FavListener(tweepy.StreamListener):
     def __init__(self, api):
         self.api = api
-        self.me = api.me()
+        self.user = api.me()
 
-    def on_status(self, tweet):
-        LOGGER.info("Processing tweet id %d", tweet.id)
+    def on_status(self, status):
+        LOGGER.info("Processing tweet id %d", status.id)
 
-        if tweet.in_reply_to_status_id is not None or tweet.user.id == self.me.id:
+        if status.in_reply_to_status_id is not None or status.user.id == self.user.id:
             # This tweet is a reply or I'm its author so, ignore it
             return
 
-        if not tweet.favorited:
+        if not status.favorited:
             # Mark it as Liked, since we have not done it yet
             try:
-                tweet.favorite()
+                status.favorite()
             except Exception:
                 LOGGER.error("Error on fav", exc_info=True)
 
-        # if not tweet.retweeted:
+        # if not status.retweeted:
         #     # Retweet, since we have not retweeted it yet
         #     try:
-        #         tweet.retweet()
+        #         status.retweet()
         #     except Exception:
         #         LOGGER.error("Error on fav and retweet", exc_info=True)
 
-    def on_error(self, status):
-        LOGGER.error(status)
+    def on_error(self, status_code):
+        LOGGER.error(status_code)
 
 
 def _main():
