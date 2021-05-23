@@ -5,6 +5,8 @@ import os
 import re
 import sys
 
+from urllib.parse import urlencode
+
 import tweepy
 
 from bg_utils import recommend_games
@@ -87,9 +89,11 @@ class FavListener(tweepy.StreamListener):
 class RecommendListener(tweepy.StreamListener):
     """Recommend games for a user."""
 
+    base_url = "https://recommend.games"
     track = ("Recommend.Games", "Recommend_Games", "RecommendGames")
     regex = re.compile(
-        r"Recommend.?Games\s+(for|to)\s+(.+)$", re.IGNORECASE | re.MULTILINE
+        pattern=r"Recommend.?Games\s+(for|to)\s+(.+)$",
+        flags=re.IGNORECASE | re.MULTILINE,
     )
 
     def __init__(self, api):
@@ -101,11 +105,14 @@ class RecommendListener(tweepy.StreamListener):
         text = get_full_text(status)
 
         LOGGER.info(
-            "Processing tweet id %d by %s: %s", status.id, status.user.name, text
+            "Processing tweet id %d by <%s>: %s",
+            status.id,
+            status.user.name,
+            text,
         )
 
         if status.in_reply_to_status_id is not None or status.user.id == self.user.id:
-            # This tweet is a reply or I'm its author so, ignore it
+            # This tweet is a reply or I'm its author – ignore it
             return
 
         match = self.regex.search(text)
@@ -113,21 +120,39 @@ class RecommendListener(tweepy.StreamListener):
         if not match or not match.group(2):
             return
 
-        username = match.group(2)
+        username = match.group(2).lower()
+
+        if username == "me":
+            return
 
         LOGGER.info("Recommending games for <%s>…", username)
 
         results = recommend_games(
+            max_results=5,
             user=username,
             exclude_known=True,
             exclude_owned=True,
             exclude_clusters=True,
         )
-        recommendation = next(results)
-        LOGGER.info(recommendation)
+        result_str = "\n".join(f"- {game['name'][:40]}" for game in results)
+
+        if not result_str:  # empty response – no recommendations
+            LOGGER.info("Unable to create recommendations for <%s>", username)
+            return
+
+        query = urlencode({"for": username})
+        url = f"{self.base_url}/#/?{query}"
+
+        response = "\n\n".join(
+            (
+                f"🤖 #RecommendGames for {username.upper()}:",
+                result_str,
+                f"Full results: {url}",
+            )
+        )
 
         self.api.update_status(
-            status=f"🤖 Recommend.Games for {username.upper()}: {recommendation['name']}",
+            status=response,
             in_reply_to_status_id=status.id,
             auto_populate_reply_metadata=True,
         )
