@@ -19,7 +19,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-board-game-utils = "^0.1.0"
+board-game-utils = "^0.1.1"
 pytility = "^0.2.0"
 tweepy = "^3.10.0"
 
@@ -30,6 +30,7 @@ mypy = "^0.812"
 pre-commit = "^2.12.1"
 psutil = "^5.8.0"
 pylint = "^2.8.2"
+python-dotenv = "^0.17.1"
 twine = "^3.4.1"
 
 [build-system]

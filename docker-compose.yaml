@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+    twitter:
+        image: registry.gitlab.com/recommend.games/board-game-bot:0.1.0
+        container_name: twitter
+        build: '.'
+        command: ['python', '-m', 'board_game_bot.twitter']
+        env_file: .env
+        restart: unless-stopped
+        stop_grace_period: 15m
+        stop_signal: SIGINT
