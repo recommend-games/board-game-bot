@@ -10,6 +10,7 @@ from urllib.parse import urlencode
 import tweepy
 
 from bg_utils import recommend_games
+from pytility import truncate
 
 CONSUMER_KEY = os.getenv("TWITTER_API_KEY")
 CONSUMER_SECRET = os.getenv("TWITTER_API_SECRET_KEY")
@@ -111,8 +112,8 @@ class RecommendListener(tweepy.StreamListener):
             text,
         )
 
-        if status.in_reply_to_status_id is not None or status.user.id == self.user.id:
-            # This tweet is a reply or I'm its author – ignore it
+        if status.user.id == self.user.id:
+            # tweet by API user – ignore it
             return
 
         match = self.regex.search(text)
@@ -134,7 +135,8 @@ class RecommendListener(tweepy.StreamListener):
             exclude_owned=True,
             exclude_clusters=True,
         )
-        result_str = "\n".join(f"- {game['name'][:40]}" for game in results)
+        games = (truncate(game["name"], 40, respect_word=True) for game in results)
+        result_str = "\n".join(f"- {game}" for game in games)
 
         if not result_str:  # empty response – no recommendations
             LOGGER.info("Unable to create recommendations for <%s>", username)

@@ -20,7 +20,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.8"
 board-game-utils = "^0.1.1"
-pytility = "^0.2.0"
+pytility = "^0.3.0"
 tweepy = "^3.10.0"
 
 [tool.poetry.dev-dependencies]

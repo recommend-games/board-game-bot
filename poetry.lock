@@ -602,7 +602,7 @@ cli = ["click (>=5.0)"]
 
 [[package]]
 name = "pytility"
-version = "0.2.0"
+version = "0.3.0"
 description = "A lean collection of Python utilities"
 category = "main"
 optional = false
@@ -932,7 +932,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "4ef6cd1c007cda0d347ef0e4e82b8cf8c895bb7136f115f61ca5299a53c599d7"
+content-hash = "0ed2508f13f0e495322ff61d8519dcfa8a956a53dc73d4f605db0fff8feb11d1"
 
 [metadata.files]
 appdirs = [
@@ -1312,8 +1312,8 @@ python-dotenv = [
     {file = "python_dotenv-0.17.1-py2.py3-none-any.whl", hash = "sha256:00aa34e92d992e9f8383730816359647f358f4a3be1ba45e5a5cefd27ee91544"},
 ]
 pytility = [
-    {file = "pytility-0.2.0-py2.py3-none-any.whl", hash = "sha256:a6e8fd800b04c959162d30470f3887a575a5d82a9d1695cd282a4fdafe02a188"},
-    {file = "pytility-0.2.0.tar.gz", hash = "sha256:c12c22c4eac1ce71a3c812931057eb73e8b8c001cd08973a941630b7f667b31e"},
+    {file = "pytility-0.3.0-py2.py3-none-any.whl", hash = "sha256:3792f994a2d84acf3531aaf5ac6f71dea43afbdc2fd5b17d2ba9f027e33fadc2"},
+    {file = "pytility-0.3.0.tar.gz", hash = "sha256:dc1b1f6f23c3d5ad2128ae21aff8cdc2f6117c486af6b2148ec2691d20dbfe92"},
 ]
 pytz = [
     {file = "pytz-2021.1-py2.py3-none-any.whl", hash = "sha256:eb10ce3e7736052ed3623d49975ce333bcd712c7bb19a58b9e2089d4057d0798"},
