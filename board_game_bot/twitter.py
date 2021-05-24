@@ -161,10 +161,15 @@ class RecommendListener(tweepy.StreamListener):
 
 
 def _main():
-    logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+    logging.basicConfig(
+        stream=sys.stderr,
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)-8.8s [%(name)s:%(lineno)s] %(message)s",
+    )
+
     api = create_api()
-    tweets_listener = RecommendListener(api)
-    stream = tweepy.Stream(api.auth, tweets_listener)
+    listener = RecommendListener(api)
+    stream = tweepy.Stream(api.auth, listener)
     stream.filter(track=RecommendListener.track)
 
 
