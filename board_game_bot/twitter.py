@@ -111,8 +111,8 @@ class RecommendListener(tweepy.StreamListener):
             text,
         )
 
-        if status.in_reply_to_status_id is not None or status.user.id == self.user.id:
-            # This tweet is a reply or I'm its author – ignore it
+        if status.user.id == self.user.id:
+            # tweet by API user – ignore it
             return
 
         match = self.regex.search(text)
