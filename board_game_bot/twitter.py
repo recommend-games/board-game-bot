@@ -1,10 +1,13 @@
 """Twitter bot."""
 
+import hashlib
 import logging
 import os
 import re
 import sys
 
+from pathlib import Path
+from typing import Optional, Tuple
 from urllib.parse import urlencode
 
 import tweepy
@@ -90,17 +93,26 @@ class FavListener(tweepy.StreamListener):
 class RecommendListener(tweepy.StreamListener):
     """Recommend games for a user."""
 
-    base_url = "https://recommend.games"
-    track = ("Recommend.Games", "Recommend_Games", "RecommendGames")
+    base_url: str = "https://recommend.games"
+    track: Tuple[str, ...] = ("Recommend.Games", "Recommend_Games", "RecommendGames")
     regex = re.compile(
         pattern=r"Recommend.?Games\s+(for|to)\s+(.+)$",
         flags=re.IGNORECASE | re.MULTILINE,
     )
+    image_base_path: Optional[str]
 
-    def __init__(self, api):
+    def __init__(self, api, image_base_path: Optional[str] = None):
         super().__init__()
         self.api = api
         self.user = api.me()
+        self.image_base_path = image_base_path
+
+    def find_image_file(self, url: Optional[str]) -> Optional[Path]:
+        """For a given URL find the locally downloaded file."""
+        if not url or not self.image_base_path:
+            return None
+        url_hash = hashlib.sha1(url.encode("utf-8"))
+        return None
 
     def on_status(self, status):
         text = get_full_text(status)
