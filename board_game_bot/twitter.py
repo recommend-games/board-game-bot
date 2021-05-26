@@ -112,6 +112,9 @@ class RecommendListener(tweepy.StreamListener):
             Path(image_base_path).resolve() if image_base_path else None
         )
 
+        if self.image_base_path:
+            LOGGER.info("Image base path: <%s>", self.image_base_path)
+
     def find_image_file(self, url: Optional[str]) -> Optional[Path]:
         """For a given URL find the locally downloaded file."""
 
@@ -164,7 +167,7 @@ class RecommendListener(tweepy.StreamListener):
         result_str = "\n".join(f"- {game}" for game in games)
 
         image_urls = arg_to_iter(results[0].get("image_url"))
-        image_url = next(image_urls, None)
+        image_url = next(iter(image_urls), None)
         image_file = self.find_image_file(image_url)
 
         query = urlencode({"for": username})
@@ -237,7 +240,7 @@ def _main():
     api = create_api()
     listener = RecommendListener(
         api=api,
-        image_base_path=BASE_PATH.parent / "board_game_scraper" / "images" / "full",
+        image_base_path=BASE_PATH.parent / "board-game-scraper" / "images" / "full",
     )
 
     if args.dry_run:
