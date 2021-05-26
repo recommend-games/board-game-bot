@@ -1,5 +1,6 @@
 """Twitter bot."""
 
+import argparse
 import hashlib
 import logging
 import os
@@ -7,13 +8,15 @@ import re
 import sys
 
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 from urllib.parse import urlencode
 
 import tweepy
 
 from bg_utils import recommend_games
-from pytility import truncate
+from pytility import arg_to_iter, truncate
+
+BASE_PATH = Path(__file__).resolve().parent.parent
 
 CONSUMER_KEY = os.getenv("TWITTER_API_KEY")
 CONSUMER_SECRET = os.getenv("TWITTER_API_SECRET_KEY")
@@ -99,20 +102,83 @@ class RecommendListener(tweepy.StreamListener):
         pattern=r"Recommend.?Games\s+(for|to)\s+(.+)$",
         flags=re.IGNORECASE | re.MULTILINE,
     )
-    image_base_path: Optional[str]
+    image_base_path: Optional[Path]
 
-    def __init__(self, api, image_base_path: Optional[str] = None):
+    def __init__(self, api, image_base_path: Union[Path, str, None] = None):
         super().__init__()
         self.api = api
         self.user = api.me()
-        self.image_base_path = image_base_path
+        self.image_base_path = (
+            Path(image_base_path).resolve() if image_base_path else None
+        )
 
     def find_image_file(self, url: Optional[str]) -> Optional[Path]:
         """For a given URL find the locally downloaded file."""
+
         if not url or not self.image_base_path:
             return None
+
         url_hash = hashlib.sha1(url.encode("utf-8"))
+        hex_digest = url_hash.hexdigest()
+        LOGGER.info("Trying to find hash <%s> for URL <%s>…", hex_digest, url)
+
+        images = self.image_base_path.glob(f"{hex_digest}.*")
+        image = next(images, None)
+
+        if image:
+            LOGGER.info("URL <%s> found locally at <%s>", url, image)
+            return image
+
         return None
+
+    def process_text(self, text: str) -> Tuple[Optional[str], Optional[Path]]:
+        """Process a tweet."""
+
+        match = self.regex.search(text)
+
+        if not match or not match.group(2):
+            return None, None
+
+        username = match.group(2).lower()
+
+        if username == "me":
+            return None, None
+
+        LOGGER.info("Recommending games for <%s>…", username)
+
+        results = tuple(
+            recommend_games(
+                max_results=5,
+                user=username,
+                exclude_known=True,
+                exclude_owned=True,
+                exclude_clusters=True,
+            )
+        )
+
+        if not results:  # empty response – no recommendations
+            LOGGER.info("Unable to create recommendations for <%s>", username)
+            return None, None
+
+        games = (truncate(game["name"], 40, respect_word=True) for game in results)
+        result_str = "\n".join(f"- {game}" for game in games)
+
+        image_urls = arg_to_iter(results[0].get("image_url"))
+        image_url = next(image_urls, None)
+        image_file = self.find_image_file(image_url)
+
+        query = urlencode({"for": username})
+        url = f"{self.base_url}/#/?{query}"
+
+        response = "\n\n".join(
+            (
+                f"🤖 #RecommendGames for {username.upper()}:",
+                result_str,
+                f"Full results: {url}",
+            )
+        )
+
+        return response, image_file
 
     def on_status(self, status):
         text = get_full_text(status)
@@ -128,42 +194,12 @@ class RecommendListener(tweepy.StreamListener):
             # tweet by API user – ignore it
             return
 
-        match = self.regex.search(text)
+        response, _ = self.process_text(text)
 
-        if not match or not match.group(2):
+        if not response:
             return
 
-        username = match.group(2).lower()
-
-        if username == "me":
-            return
-
-        LOGGER.info("Recommending games for <%s>…", username)
-
-        results = recommend_games(
-            max_results=5,
-            user=username,
-            exclude_known=True,
-            exclude_owned=True,
-            exclude_clusters=True,
-        )
-        games = (truncate(game["name"], 40, respect_word=True) for game in results)
-        result_str = "\n".join(f"- {game}" for game in games)
-
-        if not result_str:  # empty response – no recommendations
-            LOGGER.info("Unable to create recommendations for <%s>", username)
-            return
-
-        query = urlencode({"for": username})
-        url = f"{self.base_url}/#/?{query}"
-
-        response = "\n\n".join(
-            (
-                f"🤖 #RecommendGames for {username.upper()}:",
-                result_str,
-                f"Full results: {url}",
-            )
-        )
+        # TODO upload file and attach to tweet
 
         self.api.update_status(
             status=response,
@@ -172,15 +208,46 @@ class RecommendListener(tweepy.StreamListener):
         )
 
 
+def _parse_args():
+    parser = argparse.ArgumentParser(description="TODO")
+
+    parser.add_argument("--dry-run", "-n", action="store_true", help="")
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="count",
+        default=0,
+        help="log level (repeat for more verbosity)",
+    )
+
+    return parser.parse_args()
+
+
 def _main():
+    args = _parse_args()
+
     logging.basicConfig(
         stream=sys.stderr,
-        level=logging.INFO,
+        level=logging.DEBUG if args.verbose > 0 else logging.INFO,
         format="%(asctime)s %(levelname)-8.8s [%(name)s:%(lineno)s] %(message)s",
     )
 
+    LOGGER.info(args)
+
     api = create_api()
-    listener = RecommendListener(api)
+    listener = RecommendListener(
+        api=api,
+        image_base_path=BASE_PATH.parent / "board_game_scraper" / "images" / "full",
+    )
+
+    if args.dry_run:
+        response, image_file = listener.process_text(
+            "@recommend_games for Markus Shepherd"
+        )
+        LOGGER.info(response)
+        LOGGER.info(image_file)
+        return
+
     stream = tweepy.Stream(api.auth, listener)
     stream.filter(track=RecommendListener.track)
 
