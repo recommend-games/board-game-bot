@@ -197,17 +197,24 @@ class RecommendListener(tweepy.StreamListener):
             # tweet by API user – ignore it
             return
 
-        response, _ = self.process_text(text)
+        response, image_file = self.process_text(text)
 
         if not response:
             return
 
-        # TODO upload file and attach to tweet
+        try:
+            media = self.api.media_upload(image_file) if image_file else None
+        except Exception:
+            LOGGER.exception("Unable to upload file <%s>", image_file)
+            media = None
 
         self.api.update_status(
             status=response,
             in_reply_to_status_id=status.id,
             auto_populate_reply_metadata=True,
+            media_ids=[media.media_id]
+            if media and hasattr(media, "media_id")
+            else None,
         )
 
 
