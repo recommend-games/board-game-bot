@@ -223,6 +223,12 @@ class RecommendListener(tweepy.StreamListener):
 def _parse_args():
     parser = argparse.ArgumentParser(description="TODO")
 
+    parser.add_argument(
+        "--image-base-path",
+        "-i",
+        default=BASE_PATH.parent / "board-game-scraper" / "images" / "full",
+        help="",
+    )
     parser.add_argument("--dry-run", "-n", action="store_true", help="")
     parser.add_argument(
         "--verbose",
@@ -249,7 +255,7 @@ def _main():
     api = create_api()
     listener = RecommendListener(
         api=api,
-        image_base_path=BASE_PATH.parent / "board-game-scraper" / "images" / "full",
+        image_base_path=args.image_base_path,
     )
 
     if args.dry_run:
