@@ -18,19 +18,20 @@ from pytility import arg_to_iter, truncate
 
 BASE_PATH = Path(__file__).resolve().parent.parent
 
-CONSUMER_KEY = os.getenv("TWITTER_API_KEY")
-CONSUMER_SECRET = os.getenv("TWITTER_API_SECRET_KEY")
-ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
-ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
-
 LOGGER = logging.getLogger()
 
 
-def create_api():
+def create_api(
+    consumer_key,
+    consumer_secret,
+    access_token=None,
+    access_token_secret=None,
+):
     """Initialise Twitter API."""
 
-    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-    auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    if access_token and access_token_secret:
+        auth.set_access_token(access_token, access_token_secret)
     api = tweepy.API(auth)
 
     try:
@@ -224,6 +225,26 @@ def _parse_args():
     parser = argparse.ArgumentParser(description="TODO")
 
     parser.add_argument(
+        "--twitter-consumer-key",
+        default=os.getenv("TWITTER_API_KEY"),
+        help="",
+    )
+    parser.add_argument(
+        "--twitter-consumer-secret",
+        default=os.getenv("TWITTER_API_SECRET_KEY"),
+        help="",
+    )
+    parser.add_argument(
+        "--twitter-access-token",
+        default=os.getenv("TWITTER_ACCESS_TOKEN"),
+        help="",
+    )
+    parser.add_argument(
+        "--twitter-access-token-secret",
+        default=os.getenv("TWITTER_ACCESS_TOKEN_SECRET"),
+        help="",
+    )
+    parser.add_argument(
         "--image-base-path",
         "-i",
         default=BASE_PATH.parent / "board-game-scraper" / "images" / "full",
@@ -252,7 +273,12 @@ def _main():
 
     LOGGER.info(args)
 
-    api = create_api()
+    api = create_api(
+        consumer_key=args.twitter_consumer_key,
+        consumer_secret=args.twitter_consumer_secret,
+        access_token=args.twitter_access_token,
+        access_token_secret=args.twitter_access_token_secret,
+    )
     listener = RecommendListener(
         api=api,
         image_base_path=args.image_base_path,
@@ -267,7 +293,11 @@ def _main():
         return
 
     stream = tweepy.Stream(api.auth, listener)
-    stream.filter(track=RecommendListener.track)
+
+    try:
+        stream.filter(track=RecommendListener.track)
+    except Exception:
+        LOGGER.info("Closing Twitter bot 🤖 Bye bye!")
 
 
 if __name__ == "__main__":
