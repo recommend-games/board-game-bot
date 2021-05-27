@@ -108,8 +108,10 @@ class RecommendListener(tweepy.StreamListener):
         super().__init__()
         self.api = api
         self.user = api.me()
+
+        image_base_path = Path(image_base_path).resolve() if image_base_path else None
         self.image_base_path = (
-            Path(image_base_path).resolve() if image_base_path else None
+            image_base_path if image_base_path and image_base_path.is_dir() else None
         )
 
         if self.image_base_path:
