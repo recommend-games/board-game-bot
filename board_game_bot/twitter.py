@@ -18,19 +18,20 @@ from pytility import arg_to_iter, truncate
 
 BASE_PATH = Path(__file__).resolve().parent.parent
 
-CONSUMER_KEY = os.getenv("TWITTER_API_KEY")
-CONSUMER_SECRET = os.getenv("TWITTER_API_SECRET_KEY")
-ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
-ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
-
 LOGGER = logging.getLogger()
 
 
-def create_api():
+def create_api(
+    consumer_key,
+    consumer_secret,
+    access_token=None,
+    access_token_secret=None,
+):
     """Initialise Twitter API."""
 
-    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-    auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    if access_token and access_token_secret:
+        auth.set_access_token(access_token, access_token_secret)
     api = tweepy.API(auth)
 
     try:
@@ -117,7 +118,11 @@ class RecommendListener(tweepy.StreamListener):
         if self.image_base_path:
             LOGGER.info("Image base path: <%s>", self.image_base_path)
 
-    def find_image_file(self, url: Optional[str]) -> Optional[Path]:
+    def find_image_file(
+        self,
+        url: Optional[str],
+        suffix: Optional[str] = ".jpg",
+    ) -> Optional[Path]:
         """For a given URL find the locally downloaded file."""
 
         if not url or not self.image_base_path:
@@ -127,8 +132,12 @@ class RecommendListener(tweepy.StreamListener):
         hex_digest = url_hash.hexdigest()
         LOGGER.info("Trying to find hash <%s> for URL <%s>…", hex_digest, url)
 
-        images = self.image_base_path.glob(f"{hex_digest}.*")
-        image = next(images, None)
+        if suffix:
+            image = self.image_base_path / f"{hex_digest}{suffix}"
+            image = image if image.is_file() else None
+        else:
+            images = self.image_base_path.glob(f"{hex_digest}.*")
+            image = next(images, None)
 
         if image:
             LOGGER.info("URL <%s> found locally at <%s>", url, image)
@@ -223,6 +232,32 @@ class RecommendListener(tweepy.StreamListener):
 def _parse_args():
     parser = argparse.ArgumentParser(description="TODO")
 
+    parser.add_argument(
+        "--twitter-consumer-key",
+        default=os.getenv("TWITTER_API_KEY"),
+        help="",
+    )
+    parser.add_argument(
+        "--twitter-consumer-secret",
+        default=os.getenv("TWITTER_API_SECRET_KEY"),
+        help="",
+    )
+    parser.add_argument(
+        "--twitter-access-token",
+        default=os.getenv("TWITTER_ACCESS_TOKEN"),
+        help="",
+    )
+    parser.add_argument(
+        "--twitter-access-token-secret",
+        default=os.getenv("TWITTER_ACCESS_TOKEN_SECRET"),
+        help="",
+    )
+    parser.add_argument(
+        "--image-base-path",
+        "-i",
+        default=BASE_PATH.parent / "board-game-scraper" / "images" / "full",
+        help="",
+    )
     parser.add_argument("--dry-run", "-n", action="store_true", help="")
     parser.add_argument(
         "--verbose",
@@ -246,10 +281,15 @@ def _main():
 
     LOGGER.info(args)
 
-    api = create_api()
+    api = create_api(
+        consumer_key=args.twitter_consumer_key,
+        consumer_secret=args.twitter_consumer_secret,
+        access_token=args.twitter_access_token,
+        access_token_secret=args.twitter_access_token_secret,
+    )
     listener = RecommendListener(
         api=api,
-        image_base_path=BASE_PATH.parent / "board-game-scraper" / "images" / "full",
+        image_base_path=args.image_base_path,
     )
 
     if args.dry_run:
@@ -261,7 +301,11 @@ def _main():
         return
 
     stream = tweepy.Stream(api.auth, listener)
-    stream.filter(track=RecommendListener.track)
+
+    try:
+        stream.filter(track=RecommendListener.track)
+    except Exception:
+        LOGGER.exception("Closing Twitter bot 🤖 Bye bye!")
 
 
 if __name__ == "__main__":

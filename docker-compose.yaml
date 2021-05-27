@@ -5,10 +5,10 @@ services:
         image: registry.gitlab.com/recommend.games/board-game-bot:latest
         container_name: twitter
         build: '.'
-        command: ['python', '-m', 'board_game_bot.twitter']
+        command: ['python', '-m', 'board_game_bot.twitter', '--image-base-path', '/images']
         env_file: .env
         volumes:
-            - ../board-game-scraper:/app/board-game-scraper
+            - '../board-game-scraper/images/full:/images'
         restart: unless-stopped
         stop_grace_period: 15m
         stop_signal: SIGINT
