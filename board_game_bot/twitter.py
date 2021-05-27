@@ -118,7 +118,11 @@ class RecommendListener(tweepy.StreamListener):
         if self.image_base_path:
             LOGGER.info("Image base path: <%s>", self.image_base_path)
 
-    def find_image_file(self, url: Optional[str]) -> Optional[Path]:
+    def find_image_file(
+        self,
+        url: Optional[str],
+        suffix: Optional[str] = ".jpg",
+    ) -> Optional[Path]:
         """For a given URL find the locally downloaded file."""
 
         if not url or not self.image_base_path:
@@ -128,8 +132,12 @@ class RecommendListener(tweepy.StreamListener):
         hex_digest = url_hash.hexdigest()
         LOGGER.info("Trying to find hash <%s> for URL <%s>…", hex_digest, url)
 
-        images = self.image_base_path.glob(f"{hex_digest}.*")
-        image = next(images, None)
+        if suffix:
+            image = self.image_base_path / f"{hex_digest}{suffix}"
+            image = image if image.is_file() else None
+        else:
+            images = self.image_base_path.glob(f"{hex_digest}.*")
+            image = next(images, None)
 
         if image:
             LOGGER.info("URL <%s> found locally at <%s>", url, image)
@@ -297,7 +305,7 @@ def _main():
     try:
         stream.filter(track=RecommendListener.track)
     except Exception:
-        LOGGER.info("Closing Twitter bot 🤖 Bye bye!")
+        LOGGER.exception("Closing Twitter bot 🤖 Bye bye!")
 
 
 if __name__ == "__main__":
