@@ -14,11 +14,14 @@ from urllib.parse import urlencode
 import tweepy
 
 from bg_utils import recommend_games
+from dotenv import load_dotenv
 from pytility import arg_to_iter, truncate
+from urllib3.exceptions import HTTPError
 
 BASE_PATH = Path(__file__).resolve().parent.parent
-
 LOGGER = logging.getLogger()
+
+load_dotenv()
 
 
 def create_api(
@@ -304,8 +307,10 @@ def _main():
 
     try:
         stream.filter(track=RecommendListener.track)
+    except HTTPError:
+        LOGGER.info("Closing Twitter bot 🤖 Bye bye!")
     except Exception:
-        LOGGER.exception("Closing Twitter bot 🤖 Bye bye!")
+        LOGGER.exception("Something went wrong 😬 …")
 
 
 if __name__ == "__main__":
