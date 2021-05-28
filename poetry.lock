@@ -38,7 +38,7 @@ python-versions = "*"
 name = "better-exceptions"
 version = "0.3.3"
 description = "Pretty and helpful exceptions, automatically"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -145,7 +145,7 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 name = "colorama"
 version = "0.4.4"
 description = "Cross-platform colored terminal text."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -943,7 +943,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "3e505e0c4e36bb5709af9c84d381f70897a2eff62c772eedfb823540cbf2f4f1"
+content-hash = "f6b20173116e48815cc5e8ff140138efb27f15c698d7ae78c347c917c4d14e40"
 
 [metadata.files]
 appdirs = [
