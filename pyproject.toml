@@ -20,15 +20,15 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.8"
 
-better-exceptions = "^0.3.3"
 board-game-utils = "^0.1.1"
-python-dotenv = "^0.17.1"
+pretty-errors = "^1.2.24"
+python-dotenv = "^0.19.0"
 pytility = "^0.3.0"
 tweepy = "^3.10.0"
 urllib3 = "^1.26.5"
 
 [tool.poetry.dev-dependencies]
-black = "^21.5b1"
+black = "^21.9b0"
 ipython = "^7.23.1"
 mypy = "^0.812"
 pre-commit = "^2.12.1"
