@@ -1,4 +1,4 @@
-FROM python:3.8.9
+FROM python:3.8.12
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
@@ -9,7 +9,7 @@ RUN mkdir --parents /app
 WORKDIR /app
 
 RUN python3.8 -m pip install --upgrade \
-        poetry==1.1.6
+        poetry==1.1.10
 COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-dev --no-root --no-interaction --verbose
 
