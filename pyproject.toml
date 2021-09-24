@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "board-game-bot"
-version = "0.2.1"
+version = "0.2.2"
 description = "Board game recommender bots 🤖"
 authors = ["Markus Shepherd <markus@recommend.games>"]
 license = "MIT"
