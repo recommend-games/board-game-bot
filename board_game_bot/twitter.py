@@ -14,7 +14,7 @@ from urllib.parse import urlencode
 
 import tweepy
 
-from bg_utils import recommend_games
+from bg_utils.recommend import BASE_URL as RECOMMEND_GAMES_BASE_URL, recommend_games
 from dotenv import load_dotenv
 from pytility import arg_to_iter, truncate
 from urllib3.exceptions import HTTPError
@@ -65,43 +65,11 @@ def get_full_text(status):
     return None
 
 
-class FavListener(tweepy.StreamListener):
-    """Favorite tweets."""
-
-    def __init__(self, api):
-        super().__init__()
-        self.api = api
-        self.user = api.me()
-
-    def on_status(self, status):
-        LOGGER.info("Processing tweet id %d", status.id)
-
-        if status.in_reply_to_status_id is not None or status.user.id == self.user.id:
-            # This tweet is a reply or I'm its author so, ignore it
-            return
-
-        if not status.favorited:
-            # Mark it as Liked, since we have not done it yet
-            try:
-                status.favorite()
-            except Exception:
-                LOGGER.error("Error on fav", exc_info=True)
-
-        # if not status.retweeted:
-        #     # Retweet, since we have not retweeted it yet
-        #     try:
-        #         status.retweet()
-        #     except Exception:
-        #         LOGGER.error("Error on fav and retweet", exc_info=True)
-
-    def on_error(self, status_code):
-        LOGGER.error(status_code)
-
-
 class RecommendListener(tweepy.StreamListener):
     """Recommend games for a user."""
 
-    base_url: str = "https://recommend.games"
+    base_url: str
+    add_link: bool
     track: Tuple[str, ...] = ("Recommend.Games", "Recommend_Games", "RecommendGames")
     regex = re.compile(
         pattern=r"Recommend.?Games\s+(for|to)\s+(.+)$",
@@ -109,10 +77,20 @@ class RecommendListener(tweepy.StreamListener):
     )
     image_base_path: Optional[Path]
 
-    def __init__(self, api, image_base_path: Union[Path, str, None] = None):
+    def __init__(
+        self,
+        *,
+        api,
+        base_url: str = RECOMMEND_GAMES_BASE_URL,
+        add_link: bool = True,
+        image_base_path: Union[Path, str, None] = None,
+    ):
         super().__init__()
         self.api = api
         self.user = api.me()
+
+        self.base_url = base_url
+        self.add_link = add_link
 
         image_base_path = Path(image_base_path).resolve() if image_base_path else None
         self.image_base_path = (
@@ -162,10 +140,11 @@ class RecommendListener(tweepy.StreamListener):
         if username == "me":
             return None, None
 
-        LOGGER.info("Recommending games for <%s>…", username)
+        LOGGER.info("Recommending games for <%s> from <%s>…", username, self.base_url)
 
         results = tuple(
             recommend_games(
+                base_url=self.base_url,
                 max_results=5,
                 user=username,
                 exclude_known=True,
@@ -181,20 +160,21 @@ class RecommendListener(tweepy.StreamListener):
         games = (truncate(game["name"], 40, respect_word=True) for game in results)
         result_str = "\n".join(f"- {game}" for game in games)
 
+        lines = [
+            f"🤖 #RecommendGames for {username.upper()}:",
+            result_str,
+        ]
+
+        if self.add_link:
+            query = urlencode({"for": username})
+            url = f"{self.base_url}/#/?{query}"
+            lines.append(f"Full results: {url}")
+
+        response = "\n\n".join(lines)
+
         image_urls = arg_to_iter(results[0].get("image_url"))
         image_url = next(iter(image_urls), None)
         image_file = self.find_image_file(image_url)
-
-        query = urlencode({"for": username})
-        url = f"{self.base_url}/#/?{query}"
-
-        response = "\n\n".join(
-            (
-                f"🤖 #RecommendGames for {username.upper()}:",
-                result_str,
-                f"Full results: {url}",
-            )
-        )
 
         return response, image_file
 
@@ -257,6 +237,13 @@ def _parse_args():
         help="",
     )
     parser.add_argument(
+        "--base-url",
+        "-u",
+        default=os.getenv("RECOMMEND_GAMES_BASE_URL") or RECOMMEND_GAMES_BASE_URL,
+        help="",
+    )
+    parser.add_argument("--no-link", "-l", action="store_true", help="")
+    parser.add_argument(
         "--image-base-path",
         "-i",
         default=BASE_PATH.parent / "board-game-scraper" / "images" / "full",
@@ -293,6 +280,8 @@ def _main():
     )
     listener = RecommendListener(
         api=api,
+        base_url=args.base_url,
+        add_link=not args.no_link,
         image_base_path=args.image_base_path,
     )
 
