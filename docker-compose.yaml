@@ -1,11 +1,29 @@
 version: '3.8'
 
 services:
+    recommender:
+        image: gcr.io/recommendedgames/rg-server:latest
+        container_name: bot-recommender
+        environment:
+            - DEBUG=0
+            - PORT=8080
+            - BOTO_CONFIG=/app/.boto
+        ports:
+            - 8080:8080
+        volumes:
+            - '../recommend-games-server/data:/app/data'
+        restart: unless-stopped
+
     twitter:
         image: registry.gitlab.com/recommend.games/board-game-bot:latest
-        container_name: twitter
+        container_name: bot-twitter
         build: '.'
-        command: ['python', '-m', 'board_game_bot.twitter', '--image-base-path', '/images']
+        command: [
+            'python', '-m', 'board_game_bot.twitter',
+            '--base-url', 'http://recommender:8080',
+            '--no-link',
+            '--image-base-path', '/images'
+        ]
         env_file: .env
         volumes:
             - '../board-game-scraper/images/full:/images'
