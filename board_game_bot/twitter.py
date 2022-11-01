@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Twitter bot."""
 
 import argparse
@@ -7,14 +6,13 @@ import logging
 import os
 import re
 import sys
-
 from pathlib import Path
 from typing import Optional, Tuple, Union
 from urllib.parse import urlencode
 
 import tweepy
-
-from bg_utils.recommend import BASE_URL as RECOMMEND_GAMES_BASE_URL, recommend_games
+from bg_utils.recommend import BASE_URL as RECOMMEND_GAMES_BASE_URL
+from bg_utils.recommend import recommend_games
 from dotenv import load_dotenv
 from pytility import arg_to_iter, truncate
 from urllib3.exceptions import HTTPError
