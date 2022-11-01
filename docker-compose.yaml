@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
     recommender:
-        image: gcr.io/recommendedgames/rg-server:1-28-1
+        image: gcr.io/recommendedgames/rg-server:1-29-0
         container_name: bot-recommender
         environment:
             - DEBUG=0
@@ -10,7 +10,7 @@ services:
             - BOTO_CONFIG=/app/.boto
             - ADD_LOCAL_HOST=recommender,.local,${HOSTNAME}
         ports:
-            - 8080:8080
+            - 9999:8080
         volumes:
             - '../recommend-games-server/data:/app/data'
         restart: unless-stopped
