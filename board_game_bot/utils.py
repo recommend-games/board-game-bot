@@ -2,6 +2,8 @@ import hashlib
 import logging
 import re
 from pathlib import Path
+from typing import Optional, Tuple, Union
+from urllib.parse import urlencode
 
 from bg_utils.recommend import BASE_URL as RECOMMEND_GAMES_BASE_URL
 from bg_utils.recommend import recommend_games
@@ -15,19 +17,19 @@ class StatusProcessor:
 
     base_url: str
     add_link: bool
-    regex = re.compile(
-        pattern=r"Recommend.?Games\s+(for|to)\s+(.+)$",
-        flags=re.IGNORECASE | re.MULTILINE,
-    )
+    regex: re.Pattern
     image_base_path: Optional[Path]
 
     def __init__(
         self: "StatusProcessor",
         *,
+        regex: re.Pattern,
         base_url: str = RECOMMEND_GAMES_BASE_URL,
         add_link: bool = True,
         image_base_path: Union[Path, str, None] = None,
     ):
+        self.regex = regex
+
         self.base_url = base_url
         self.add_link = add_link
 
