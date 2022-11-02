@@ -15,6 +15,6 @@ class MyStreamListener(StreamListener):
         print(h.handle(status["content"]))
 
 
-m = Mastodon(api_base_url="https://mastodon.social")
+m = Mastodon(api_base_url="https://botsin.space")
 m.verify_minimum_version("1.1.0")
-m.stream_hashtag("introduction", MyStreamListener())
+m.stream_hashtag("RecommendGames", MyStreamListener())
