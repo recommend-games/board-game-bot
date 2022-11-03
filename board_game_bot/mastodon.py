@@ -1,10 +1,18 @@
+import argparse
 import logging
+import os
+import re
+import sys
+from pathlib import Path
+from typing import Union
 
 import html2text
 import mastodon
+from bg_utils.recommend import BASE_URL as RECOMMEND_GAMES_BASE_URL
 
 from board_game_bot.utils import StatusProcessor
 
+BASE_PATH = Path(__file__).resolve().parent.parent
 LOGGER = logging.getLogger(__name__)
 
 
@@ -12,7 +20,7 @@ class RecommendListener(mastodon.StreamListener):
     """Recommend games for a user."""
 
     api: mastodon.Mastodon
-    user: mastodon.Mastodon.AttribAccessDict
+    user: mastodon.AttribAccessDict
     status_processor: StatusProcessor
     html_processor: html2text.HTML2Text
     track: str = "RecommendGames"
@@ -30,7 +38,7 @@ class RecommendListener(mastodon.StreamListener):
         self.api = api
         if not self.api.verify_minimum_version("1.1.0"):
             LOGGER.error("Mastodon API needs to be at least v1.1.0")
-            raise Something
+            raise mastodon.MastodonError
 
         self.user = self.api.me()
 
@@ -67,7 +75,7 @@ class RecommendListener(mastodon.StreamListener):
             # toot by API user – ignore it
             return
 
-        response, image_file = self.processor.process_text(text)
+        response, image_file = self.status_processor.process_text(text)
 
         if not response:
             return
@@ -165,7 +173,7 @@ def _main():
     )
 
     if args.dry_run:
-        response, image_file = listener.processor.process_text(
+        response, image_file = listener.status_processor.process_text(
             "#RecommendGames for Markus Shepherd"
         )
         LOGGER.info(response)
