@@ -26,6 +26,7 @@ mastodon-py = "*"
 pretty-errors = "*"
 python-dotenv = "*"
 pytility = "*"
+requests = "*"
 tweepy = "<4.0.0"
 urllib3 = "*"
 
@@ -37,6 +38,7 @@ pre-commit = "*"
 psutil = "*"
 pylint = "*"
 twine = "*"
+types-requests = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
