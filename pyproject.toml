@@ -39,6 +39,7 @@ psutil = "*"
 pylint = "*"
 twine = "*"
 types-requests = "*"
+types-urllib3 = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
