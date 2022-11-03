@@ -108,26 +108,16 @@ class RecommendListener(mastodon.StreamListener):
 def _parse_args():
     parser = argparse.ArgumentParser(description="TODO")
 
-    # parser.add_argument(
-    #     "--twitter-consumer-key",
-    #     default=os.getenv("TWITTER_API_KEY"),
-    #     help="",
-    # )
-    # parser.add_argument(
-    #     "--twitter-consumer-secret",
-    #     default=os.getenv("TWITTER_API_SECRET_KEY"),
-    #     help="",
-    # )
-    # parser.add_argument(
-    #     "--twitter-access-token",
-    #     default=os.getenv("TWITTER_ACCESS_TOKEN"),
-    #     help="",
-    # )
-    # parser.add_argument(
-    #     "--twitter-access-token-secret",
-    #     default=os.getenv("TWITTER_ACCESS_TOKEN_SECRET"),
-    #     help="",
-    # )
+    parser.add_argument(
+        "--mastodon-api-url",
+        default=os.getenv("MASTODON_API_URL"),
+        help="",
+    )
+    parser.add_argument(
+        "--mastodon-access-token",
+        default=os.getenv("MASTODON_ACCESS_TOKEN"),
+        help="",
+    )
     parser.add_argument(
         "--base-url",
         "-u",
@@ -164,14 +154,10 @@ def _main():
 
     LOGGER.info(args)
 
-    # api = create_api(
-    #     consumer_key=args.twitter_consumer_key,
-    #     consumer_secret=args.twitter_consumer_secret,
-    #     access_token=args.twitter_access_token,
-    #     access_token_secret=args.twitter_access_token_secret,
-    # )
-
-    api = mastodon.Mastodon(access_token="bot_user.secret")
+    api = mastodon.Mastodon(
+        api_base_url=args.mastodon_api_url,
+        access_token=args.mastodon_access_token,
+    )
     listener = RecommendListener(
         api=api,
         base_url=args.base_url,
