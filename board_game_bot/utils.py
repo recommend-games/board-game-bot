@@ -68,18 +68,21 @@ class StatusProcessor:
 
         return None
 
-    def process_text(self, text: str) -> Tuple[Optional[str], Optional[Path]]:
+    def process_text(
+        self,
+        text: str,
+    ) -> Tuple[Optional[str], Tuple[dict, ...], Optional[Path]]:
         """Process a tweet."""
 
         match = self.regex.search(text)
 
         if not match or not match.group(2):
-            return None, None
+            return None, (), None
 
         username = match.group(2).lower()
 
         if username == "me":
-            return None, None
+            return None, (), None
 
         LOGGER.info("Recommending games for <%s> from <%s>…", username, self.base_url)
 
@@ -96,7 +99,7 @@ class StatusProcessor:
 
         if not results:  # empty response – no recommendations
             LOGGER.info("Unable to create recommendations for <%s>", username)
-            return None, None
+            return None, (), None
 
         games = (truncate(game["name"], 40, respect_word=True) for game in results)
         result_str = "\n".join(f"- {game}" for game in games)
@@ -117,4 +120,4 @@ class StatusProcessor:
         image_url = next(iter(image_urls), None)
         image_file = self.find_image_file(image_url)
 
-        return response, image_file
+        return response, results, image_file

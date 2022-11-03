@@ -8,6 +8,7 @@ from typing import Union
 
 import html2text
 import mastodon
+import requests
 from bg_utils.recommend import BASE_URL as RECOMMEND_GAMES_BASE_URL
 
 from board_game_bot.utils import StatusProcessor
@@ -67,7 +68,7 @@ class RecommendListener(mastodon.StreamListener):
         LOGGER.info(
             "Processing toot id %d by <%s>: %s",
             status["id"],
-            status["account"]["username"],
+            status["account"]["acct"],
             text,
         )
 
@@ -75,23 +76,29 @@ class RecommendListener(mastodon.StreamListener):
             # toot by API user – ignore it
             return
 
-        response, image_file = self.status_processor.process_text(text)
+        response, games, image_file = self.status_processor.process_text(text)
 
         if not response:
             return
 
-        # TODO media upload
-        # try:
-        #     media = self.api.media_upload(image_file) if image_file else None
-        # except Exception:
-        #     LOGGER.exception("Unable to upload file <%s>", image_file)
-        #     media = None
-        media = None
+        try:
+            game = games[0]["name"] if games else None
+            media = (
+                self.api.media_post(
+                    media_file=str(image_file),
+                    description=f'Cover of "{game}"' if game else None,
+                )
+                if image_file
+                else None
+            )
+        except Exception:
+            LOGGER.exception("Unable to upload file <%s>", image_file)
+            media = None
 
         self.api.status_post(
             status=response,
             in_reply_to_id=status,
-            media_ids=[media["id"]] if media and media.get("id") else None,
+            media_ids=[media] if media is not None else None,
             visibility="unlisted",
             language="en",
             idempotency_key=None,  # TODO use for retries
@@ -173,14 +180,21 @@ def _main():
     )
 
     if args.dry_run:
-        response, image_file = listener.status_processor.process_text(
+        response, games, image_file = listener.status_processor.process_text(
             "#RecommendGames for Markus Shepherd"
         )
         LOGGER.info(response)
+        LOGGER.info(games)
         LOGGER.info(image_file)
         return
 
-    api.stream_hashtag(tag=listener.track, listener=listener)
+    try:
+        api.stream_hashtag(tag=listener.track, listener=listener)
+    except requests.ConnectionError:
+        LOGGER.info("Closing Mastodon bot 🤖 Bye bye!")
+    except Exception as exc:
+        print(type(exc))
+        LOGGER.exception("Something went wrong 😬 …")
 
 
 if __name__ == "__main__":

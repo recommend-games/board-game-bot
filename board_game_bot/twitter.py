@@ -100,7 +100,7 @@ class RecommendListener(tweepy.StreamListener):
             # tweet by API user – ignore it
             return
 
-        response, image_file = self.processor.process_text(text)
+        response, _, image_file = self.processor.process_text(text)
 
         if not response:
             return
@@ -194,10 +194,11 @@ def _main():
     )
 
     if args.dry_run:
-        response, image_file = listener.processor.process_text(
+        response, games, image_file = listener.processor.process_text(
             "@recommend_games for Markus Shepherd"
         )
         LOGGER.info(response)
+        LOGGER.info(games)
         LOGGER.info(image_file)
         return
 
