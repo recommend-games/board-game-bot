@@ -20,7 +20,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "~3.8"
 
-board-game-utils = "*"
+board-game-utils = "<0.2.0"
 html2text = "*"
 mastodon-py = "*"
 pretty-errors = "*"

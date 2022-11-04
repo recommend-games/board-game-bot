@@ -31,3 +31,20 @@ services:
         restart: unless-stopped
         stop_grace_period: 15m
         stop_signal: SIGINT
+
+    mastodon:
+        image: registry.gitlab.com/recommend.games/board-game-bot:latest
+        container_name: bot-mastodon
+        build: '.'
+        command: [
+            'python', '-m', 'board_game_bot.mastodon',
+            '--base-url', 'http://recommender:8080',
+            '--no-link',
+            '--image-base-path', '/images'
+        ]
+        env_file: .env
+        volumes:
+            - '../board-game-scraper/images/full:/images'
+        restart: unless-stopped
+        stop_grace_period: 15m
+        stop_signal: SIGINT
