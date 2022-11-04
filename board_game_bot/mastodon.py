@@ -24,7 +24,9 @@ class RecommendListener(mastodon.StreamListener):
     user: mastodon.AttribAccessDict
     status_processor: StatusProcessor
     html_processor: html2text.HTML2Text
+
     track: str = "RecommendGames"
+    add_mention: bool = True
 
     def __init__(
         self,
@@ -32,6 +34,7 @@ class RecommendListener(mastodon.StreamListener):
         api: mastodon.Mastodon,
         base_url: str = RECOMMEND_GAMES_BASE_URL,
         add_link: bool = True,
+        add_mention: bool = True,
         image_base_path: Union[Path, str, None] = None,
     ):
         super().__init__()
@@ -59,6 +62,8 @@ class RecommendListener(mastodon.StreamListener):
         )
         self.html_processor.ignore_emphasis = True
         self.html_processor.ignore_links = True
+
+        self.add_mention = add_mention
 
     def on_update(self, status):
         """TODO."""
@@ -95,6 +100,9 @@ class RecommendListener(mastodon.StreamListener):
             LOGGER.exception("Unable to upload file <%s>", image_file)
             media = None
 
+        if self.add_mention:
+            response = f"@{status.account.acct}\n\n{response}"
+
         self.api.status_post(
             status=response,
             in_reply_to_id=status,
@@ -125,6 +133,7 @@ def _parse_args():
         help="",
     )
     parser.add_argument("--no-link", "-l", action="store_true", help="")
+    parser.add_argument("--no-mention", "-m", action="store_true", help="")
     parser.add_argument(
         "--image-base-path",
         "-i",
@@ -162,6 +171,7 @@ def _main():
         api=api,
         base_url=args.base_url,
         add_link=not args.no_link,
+        add_mention=not args.no_mention,
         image_base_path=args.image_base_path,
     )
 
