@@ -185,11 +185,13 @@ def _main():
         return
 
     try:
+        # TODO listen for mentions – this should also catch unlisted toots
         api.stream_hashtag(tag=listener.track, listener=listener)
     except requests.ConnectionError:
         LOGGER.info("Closing Mastodon bot 🤖 Bye bye!")
-    except Exception as exc:
-        print(type(exc))
+    except mastodon.MastodonNetworkError as exc:
+        LOGGER.error("There was a problem with the Mastodon 🐘 server: %s", exc)
+    except Exception:
         LOGGER.exception("Something went wrong 😬 …")
 
 
