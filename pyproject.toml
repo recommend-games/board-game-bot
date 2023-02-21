@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "board-game-bot"
-version = "0.3.1"
+version = "0.4.0"
 description = "Board game recommender bots 🤖"
 authors = ["Markus Shepherd <markus@recommend.games>"]
 license = "MIT"
@@ -11,7 +11,8 @@ keywords = [
     "board games",
     "tabletop games",
     "bot",
-    "twitter"
+    "twitter",
+    "mastodon"
 ]
 classifiers = [
     "Topic :: Games/Entertainment :: Board Games"
