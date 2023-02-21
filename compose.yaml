@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
     recommender:
-        image: gcr.io/recommendedgames/rg-server:1-29-0
+        image: gcr.io/recommendedgames/rg-server:1-29-2
         container_name: bot-recommender
         environment:
             - DEBUG=0
