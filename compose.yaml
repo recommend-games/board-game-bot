@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
     recommender:
-        image: gcr.io/recommendedgames/rg-server:1-28-1
+        image: gcr.io/recommendedgames/rg-server:1-29-2
         container_name: bot-recommender
         environment:
             - DEBUG=0
@@ -10,7 +10,7 @@ services:
             - BOTO_CONFIG=/app/.boto
             - ADD_LOCAL_HOST=recommender,.local,${HOSTNAME}
         ports:
-            - 8080:8080
+            - 9999:8080
         volumes:
             - '../recommend-games-server/data:/app/data'
         restart: unless-stopped
@@ -21,6 +21,23 @@ services:
         build: '.'
         command: [
             'python', '-m', 'board_game_bot.twitter',
+            '--base-url', 'http://recommender:8080',
+            '--no-link',
+            '--image-base-path', '/images'
+        ]
+        env_file: .env
+        volumes:
+            - '../board-game-scraper/images/full:/images'
+        restart: unless-stopped
+        stop_grace_period: 15m
+        stop_signal: SIGINT
+
+    mastodon:
+        image: registry.gitlab.com/recommend.games/board-game-bot:latest
+        container_name: bot-mastodon
+        build: '.'
+        command: [
+            'python', '-m', 'board_game_bot.mastodon',
             '--base-url', 'http://recommender:8080',
             '--no-link',
             '--image-base-path', '/images'
